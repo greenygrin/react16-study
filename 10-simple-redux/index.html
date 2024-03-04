@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Redux</title>
+</head>
+<body>
+    <h1>Simple Redux</h1>
+
+    <!-- component -->
+    <h2 id="label">0</h2>
+    <div>
+        <button type="button" id="plusButton">+1</button>
+        <button type="button" id="minusButton">-1</button>
+    </div>
+
+    <!-- 리덕스는 본디 독립적인 Framework 임 (redux cdn 검색) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.min.js"></script>
+
+    <script>
+        /** ------------------------ module 영역 ----------------------- **/
+
+        /**
+         * 1) 액션 - 컴포넌트가 겪는 상황을 구분하는 문자열 값
+         */
+        const PLUS = 'PLUS';
+        const MINUS = 'MINUS';
+
+        /** 액션 생성 함수 **/
+        // 액션 객체를 만들어서 (스토어에게) 리턴한다.
+        // 액션 생성 함수는 컴포넌트에 대한 액션 값의 수 만큼 정의하되 필요하다면 파라미터를 자유롭게 정의할 수 있다.
+        function plusAction(value) {
+            // 액션 객체는 반드시 type이라는 key에 action값을  포함해야 한다.
+            // 그 밖의 데이터들은 개발자가 자율적으로 추가할 수 있다.
+            const action = {
+                type: PLUS,
+                diff: value
+            };
+            return action;
+        }
+
+        const minusAction = (value) => ({ type: MINUS,  diff: value });     // 화살표 함수로 표기 (위와 동일한 표현)
+
+        /**
+         * 2) 상태값 - 단순 JSON 객체
+         * 컴포넌트에서 다루고자 하는 데이터들을 포함한다.
+         */
+        const initialState = {
+            number: 0,          // 컴포넌트에 표시할 데이터
+            color: '#f60'       // 컴포넌트에 적용할 글자 색상
+        };
+
+        /**
+         * 3) 리듀서 - 액션값이 OO일 때 상태값을 XX로 변경하는 처리를 정의한 함수
+         */
+        const myCountReducer = (state = initialState, action = null) => {
+            console.log(action);
+
+            let numberValue = 0;
+            let colorValue = '#000';
+
+            switch (action.type) {
+                case PLUS:
+                    numberValue = state.number + action.diff;
+                    break;
+                case MINUS:
+                    numberValue = state.number - action.diff;
+                    break;
+                default:
+                    return state;
+            }
+
+            //colorValue = '#000';
+
+            if (numberValue > 0) {
+                colorValue = '#2f77eb';
+            } else if (numberValue < 0) {
+                colorValue = '#f60';
+            }
+
+            return {
+                number: numberValue,
+                color: colorValue
+            }
+        }
+
+        /**
+         * 4) 스토어 - 모든 상태값을 저장하고 있는 중앙 저장소
+         */
+        // 리듀서로 정의한 함수를 스토어로 구성한다.
+        const store = Redux.createStore(myCountReducer);
+
+
+        /** ------------------------ component 영역 ----------------------- **/
+
+        /**
+         * 5) 구독 - 특정 함수를 스토어에 등록하는 처리.
+         * 스토어에 등록된 상태값이 변경될 때 이 함수가 자동으로 호출된다.
+         * 스토어에 등록되는 함수가 화면을 갱신해야 한다.
+         */
+        store.subscribe(() => {
+            // 스토어에 등록된 리듀서 함수를 통해 state값을 리턴받는다.
+            const state = store.getState();
+            document.getElementById('label').innerText = state.number;
+            document.getElementById('label').style.color = state.color;
+            console.log('스토어를 구독하는 함수가 실행됨');
+        });
+        
+        /**
+         * 6) 디스패치 - 단순하게 보면 액션함수를 호출하는 행위.
+         * 액션함수의 리턴값은 스토어(store)에 전될되는데, 이때 스토어를 구독하고 있는 함수가 실행되어 화면을 갱신한다.
+         * 대부분 HTML 요소의 이벤트가 발생했을 때 수행된다.
+         */
+        document.getElementById('plusButton').addEventListener('click', () => {
+            store.dispatch(plusAction(1));
+        });
+
+        document.getElementById('minusButton').addEventListener('click', () => {
+            store.dispatch(minusAction(1));
+        });
+    </script>
+</body>
+</html>
